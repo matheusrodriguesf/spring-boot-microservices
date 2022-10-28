@@ -7,17 +7,22 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.pessoal.cambioservice.model.Cambio;
+import br.com.pessoal.cambioservice.api.CambioApi;
+import br.com.pessoal.cambioservice.service.CambioService;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("cambio-service")
+@RequiredArgsConstructor
 public class CambioController {
 
+    private final CambioService service;
+
     @GetMapping(value = "/{amount}/{from}/{to}")
-    public Cambio getCambio(
+    public CambioApi getCambio(
             @PathVariable("amount") BigDecimal amount,
             @PathVariable("from") String from,
             @PathVariable("to") String to) {
-        return new Cambio(1L, from, to, BigDecimal.TEN, amount.multiply(BigDecimal.TEN), "Teste");
+        return service.getCambio(from, to, amount);
     }
 }
