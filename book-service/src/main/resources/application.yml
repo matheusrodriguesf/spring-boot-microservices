@@ -15,6 +15,10 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  jackson:
+    default-property-inclusion: NON_NULL 
+    serialization:
+      fail-on-empty-beans: false
   flyway:
     url: jdbc:postgresql://localhost:5432/
     shemas: book_service
