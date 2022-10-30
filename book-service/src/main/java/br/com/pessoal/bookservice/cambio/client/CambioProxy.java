@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import br.com.pessoal.bookservice.cambio.api.CambioApi;
 
-@FeignClient(name = "cambio-service", url = "${client.cambio-service.url}")
+@FeignClient(name = "cambio-service")
 public interface CambioProxy {
 
     @GetMapping(value = "/cambio-service/{amount}/{from}/{to}")
