@@ -28,6 +28,7 @@ spring:
     schemas: book_service
     user: postgres
     password: 123456
-  client:
-    cambio-service:
-      url: http://localhost:8101
+springdoc:
+  api-docs:
+    show-actuator: true
+    path: book-service/v3/api-docs
