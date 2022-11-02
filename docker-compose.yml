@@ -1,0 +1,130 @@
+version: '3.4'
+services:
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - 9411:9411
+    networks:
+      - pessoal-network
+
+  cambio-db:
+    image: postgres
+    container_name: cambio-db
+    restart: always
+    environment:
+      - POSTGRES_USER=postgre
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=cambio_service
+      - TZ=America/Sao_Paulo
+      - POSTGRES_TCP_PORT=5433
+    ports:
+      - 5433:5433
+    expose:
+      - 5433
+    networks:
+       - pessoal-network
+
+  book-db:
+    image: postgres
+    container_name: book-db
+    restart: always
+    environment:
+      - POSTGRES_USER=postgre
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=book_service
+      - TZ=America/Sao_Paulo
+      - POSTGRES_TCP_PORT=5434
+    ports:
+      - 5434:5434
+    expose:
+      - 5434
+    networks:
+       - pessoal-network
+
+  naming-server:
+    image: matheusrfa/service-registry
+    container_name: naming-server
+    restart: always
+    build:
+      context: .
+      dockerfile: service-registry/Dockerfile
+    ports:
+      - 8761:8761
+    networks:
+      - pessoal-network
+
+  api-gateway:
+    image: matheusrfa/api-gateway
+    container_name: api-gateway
+    restart: always
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    ports:
+      - 8765:8765
+    depends_on:
+      - naming-server
+    environment:
+      - SPRING.ZIPKIN.BASEURL=http://zipkin:9411/
+      - EUREKA.CLIENT.SERVICEURL.DEFAULTZONE=http://naming-server:8761/eureka/
+    networks:
+      - pessoal-network
+
+  cambio-service:
+    image: matheusrfa/cambio-service
+    container_name: cambio-service
+    restart: always
+    build:
+      context: .
+      dockerfile: cambio-service/Dockerfile
+    ports:
+      - 8000:8000
+    networks:
+      - pessoal-network
+    depends_on:
+      - naming-server
+      - cambio-db
+      - api-gateway
+      - zipkin
+    environment:
+      TZ: America/Sao_Paulo
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://naming-server:8761/eureka
+      SPRING.ZIPKIN.BASEURL: http://zipkin:9411/
+      SPRING.DATASOURCE.URL: jdbc:postgresql://cambio-db:5433/cambio_service?useSSL=false&enabledTLSProtocols=TLSv1.2
+      SPRING.DATASOURCE.USERNAME: postgres
+      SPRING.DATASOURCE.PASSWORD: 123456
+      SPRING.FLYWAY.URL: jdbc:postgresql://cambio-db:5433/cambio_service?useSSL=false&enabledTLSProtocols=TLSv1.2
+      SPRING.FLYWAY.USER: postgres
+      SPRING.FLYWAY.PASSWORD: 123456
+  
+  book-service:
+    image: matheusrfa/book-service
+    container_name: book-service
+    restart: always
+    build:
+      context: .
+      dockerfile: book-service/Dockerfile
+    ports:
+      - 8001:8001
+    networks:
+      - pessoal-network
+    depends_on:
+      - naming-server
+      - book-db
+      - api-gateway
+      - zipkin
+    environment:
+      TZ: America/Sao_Paulo
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://naming-server:8761/eureka
+      SPRING.ZIPKIN.BASEURL: http://zipkin:9411/
+      SPRING.DATASOURCE.URL: jdbc:postgresql://book-db:5434/book_service?useSSL=false&enabledTLSProtocols=TLSv1.2
+      SPRING.DATASOURCE.USERNAME: postgres
+      SPRING.DATASOURCE.PASSWORD: 123456
+      SPRING.FLYWAY.URL: jdbc:postgresql://book-db:5434/book_service?useSSL=false&enabledTLSProtocols=TLSv1.2
+      SPRING.FLYWAY.USER: postgres
+      SPRING.FLYWAY.PASSWORD: 123456                   
+
+networks:
+  pessoal-network:
+    driver: bridge

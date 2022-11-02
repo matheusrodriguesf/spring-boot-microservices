@@ -24,8 +24,7 @@ spring:
     serialization:
       fail-on-empty-beans: false
   flyway:
-    url: jdbc:postgresql://localhost:5432/
-    schemas: book_service
+    url: jdbc:postgresql://localhost:5432/book_service
     user: postgres
     password: 123456
   sleuth:
